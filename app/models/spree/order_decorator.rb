@@ -7,6 +7,8 @@ Spree::Order.class_eval do
   before_save :process_store_credit, :if => "self.user.present? && @store_credit_amount"
   after_save :ensure_sufficient_credit, :if => "self.user.present? && !self.completed?"
 
+  insert_checkout_step :redeem, :before => :payment
+
   validates_with StoreCreditMinimumValidator
 
   def process_payments_with_credits!
