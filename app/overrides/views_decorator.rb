@@ -12,12 +12,14 @@ Deface::Override.new(
   :text => "<%= link_to_with_icon('icon-dollar', Spree.t('add_store_credit'), new_admin_user_store_credit_url(user), {no_text: true}) %>",
   :disabled => false)
 
+if false 
 Deface::Override.new(
   :virtual_path => "spree/checkout/_payment",
   :name => "store_credits_checkout_payment_step",
   :insert_after => "[data-hook='checkout_payment_step']",
   :partial => "spree/checkout/store_credits",
   :disabled => false)
+end
 
 Deface::Override.new(
   :virtual_path => "spree/users/show",
@@ -32,3 +34,34 @@ Deface::Override.new(
   :insert_before => "[data-hook='buttons']",
   :partial => "spree/admin/store_credits/limit",
   :disabled => true)
+
+Deface::Override.new(
+  :virtual_path => "spree/checkout/_payment",
+  :name => "remove coupon code from payment page",
+  :remove => "[data-hook='coupon_code']",
+  :disabled => false)
+
+
+string1 = <<'HEREDOC'
+ <erb silent> if session[:have_a_coupon_code] </erb> 
+<input type='hidden' value='false' name='have_a_coupon_code'>
+<input type='checkbox' value='true' name='have_a_coupon_code' id='have_a_coupon_code' checked> I have a coupon</input>
+ <erb silent> else </erb> 
+ <input type='hidden' value='false' name='have_a_coupon_code'>
+<input type='checkbox' value='true' name='have_a_coupon_code' id='have_a_coupon_code'> I have a coupon</input>
+ <erb silent> end </erb>
+HEREDOC
+
+
+
+Deface::Override.new(
+  :virtual_path => "spree/orders/edit",
+  :name => "remove coupon code from cart page",
+  :replace => "erb[loud]:contains(':coupon_code')",
+  :text => string1,
+  :disabled => false)
+
+
+
+
+

@@ -1,9 +1,13 @@
 module Spree
   CheckoutController.class_eval do
+
     before_filter :remove_payments_attributes_if_total_is_zero
+    before_action :customer_has_a_coupon
+
 
     [:store_credit_amount, :remove_store_credits].each do |attrib|
       Spree::PermittedAttributes.checkout_attributes << attrib unless Spree::PermittedAttributes.checkout_attributes.include?(attrib)
+   # byebug
     end
 
     private
@@ -20,5 +24,17 @@ module Spree
         params[:order].delete(:payments_attributes)
       end
     end
+
+    def customer_has_a_coupon
+       if session[:have_a_coupon_code]=true   
+         @order.customer_has_a_coupon = true
+        else
+         @order.customer_has_a_coupon = false
+       end
+    
+    end
+
+
+
   end
 end

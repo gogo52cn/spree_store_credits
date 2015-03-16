@@ -1,5 +1,7 @@
 Spree::Order.class_eval do
+
   attr_accessor :store_credit_amount, :remove_store_credits
+  attr_accessor :customer_has_a_coupon
 
   # the check for user? below is to ensure we don't break the
   # admin app when creating a new order from the admin console
@@ -7,12 +9,29 @@ Spree::Order.class_eval do
   before_save :process_store_credit, :if => "self.user.present? && @store_credit_amount"
   after_save :ensure_sufficient_credit, :if => "self.user.present? && !self.completed?"
 
-  insert_checkout_step :redeem, :before => :payment
+#insert_checkout_step :redeem, :before => :payment
 
-  validates_with StoreCreditMinimumValidator
+checkout_flow do
+  go_to_state :address
+  go_to_state :delivery
+  go_to_state :redeem, if: ->(order) {
+    order.customer_has_a_coupon || (order.user.store_credits.sum(:remaining_amount)>0.01 if order.user)
+  }
+  go_to_state :payment, if: ->(order) {
+    order.update_totals
+    order.payment_required?
+  }
+  go_to_state :confirm, if: ->(order) { order.confirmation_required? }
+  go_to_state :complete
+  remove_transition :from => :delivery, :to => :confirm
+end
+
+validates_with StoreCreditMinimumValidator
+
 
   def process_payments_with_credits!
-    if total > 0 && pending_payments.empty?
+    #byebug
+    if total > 0 && (pending_payments.empty? && unprocessed_payments.empty?)
       false
     else
       process_payments_without_credits!
@@ -43,6 +62,7 @@ Spree::Order.class_eval do
   # credit or update store credit adjustment to correct value if amount specified
   #
   def process_store_credit
+
     @store_credit_amount = BigDecimal.new(@store_credit_amount.to_s).round(2)
 
     # store credit can't be greater than order total (not including existing credit), or the user's available credit
@@ -55,13 +75,17 @@ Spree::Order.class_eval do
         sca.update_attributes({:amount => -(@store_credit_amount)})
       else
         # create adjustment off association to prevent reload
-        sca = adjustments.store_credits.create(:label => Spree.t(:store_credit) , :amount => -(@store_credit_amount))
+        sca = adjustments.store_credits.create(:order=>self, :label => Spree.t(:store_credit) , :amount => -(@store_credit_amount))
       end
+
     end
 
+ #byebug
     # recalc totals and ensure payment is set to new amount
     update_totals
     pending_payments.first.amount = total if pending_payments.first
+    unprocessed_payments.first.amount = total if unprocessed_payments.first
+  #  byebug
   end
 
   def consume_users_credit
@@ -75,6 +99,7 @@ Spree::Order.class_eval do
           store_credit.remaining_amount -= credit_used
           store_credit.save
           credit_used = 0
+          #byebug
         else
           credit_used -= store_credit.remaining_amount
           store_credit.update_attribute(:remaining_amount, 0)
@@ -84,6 +109,7 @@ Spree::Order.class_eval do
   end
   # consume users store credit once the order has completed.
   state_machine.after_transition :to => :complete,  :do => :consume_users_credit
+  state_machine.after_transition :to => :payment,  :do => :apply_free_shipping_promotions
 
   # ensure that user has sufficient credits to cover adjustments
   #

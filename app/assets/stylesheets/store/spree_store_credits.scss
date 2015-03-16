@@ -1,0 +1,19 @@
+
+@import 'spree/frontend/variables';
+@import 'font-awesome';
+
+#billing, #shipping, #redeem,  #shipping_method,
+#payment, #order_details, #order_summary {
+  margin-top: 10px;
+  border: $default_border;
+  padding: 10px;
+
+  legend {
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: $base_font_size + 2;
+    color: $link_text_color;
+    padding: 5px;
+    margin-left: 15px;
+  }
+}
