@@ -28,8 +28,10 @@ module Spree
     def customer_has_a_coupon
        if session[:have_a_coupon_code]==true   
          @order.customer_has_a_coupon = true
+         @order.save
         else
          @order.customer_has_a_coupon = false
+         @order.save
        end
     
     end

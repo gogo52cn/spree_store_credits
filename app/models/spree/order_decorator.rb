@@ -1,7 +1,7 @@
 Spree::Order.class_eval do
 
   attr_accessor :store_credit_amount, :remove_store_credits
-  attr_accessor :customer_has_a_coupon
+  #attr_accessor :customer_has_a_coupon
 
   # the check for user? below is to ensure we don't break the
   # admin app when creating a new order from the admin console
