@@ -16,6 +16,7 @@ checkout_flow do
   go_to_state :delivery
   go_to_state :redeem, if: ->(order) {
     order.customer_has_a_coupon || (order.user.store_credits.sum(:remaining_amount)>0.01 if order.user)
+  #byebug
   }
   go_to_state :payment, if: ->(order) {
     order.update_totals
