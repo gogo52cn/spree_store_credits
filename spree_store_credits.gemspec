@@ -4,7 +4,7 @@ Gem::Specification.new do |s|
   s.platform    = Gem::Platform::RUBY
 
   s.name        = 'spree_store_credits'
-  s.version     = '1.1.1'
+  s.version     = '1.1.2'
   s.authors     = ["Roman Smirnov", "Brian Quinn"]
   s.email       = 'roman@railsdog.com'
   s.homepage    = 'http://github.com/spree/spree-store-credits'
